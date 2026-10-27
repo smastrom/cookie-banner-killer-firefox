@@ -1,0 +1,41 @@
+{
+  "manifest_version": 2,
+  "name": "Cookie Banner Killer",
+  "version": "1.0.2",
+  "author": "Astro",
+  "description": "Removes cookie banners with filter lists and site exceptions.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": { "scripts": ["background.js"], "persistent": true },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ],
+  "browser_action": {
+    "default_title": "Cookie Banner Killer",
+    "default_popup": "ui/popup.html",
+    "default_icon": "icons/shield.svg"
+  },
+  "icons": { "48": "icons/shield.svg", "96": "icons/shield.svg" },
+  "options_ui": { "page": "ui/options.html", "open_in_tab": true },
+  "content_security_policy": "script-src 'self'; object-src 'none'",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "cookie-banner-killer@local.extension",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": { "required": ["none"] }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cookie Banner Killer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="popup">
+    <header class="brand">
+      <img src="../icons/shield.svg" width="28" height="28" alt="" />
+      <strong>Cookie Banner Killer</strong>
+    </header>
+    <main>
+      <label class="toggle-row"
+        ><span>Block cookie banners</span
+        ><input id="enabled" type="checkbox" role="switch" disabled
+      /></label>
+      <section class="site-card" aria-label="Current website">
+        <span class="eyebrow" id="status">Loading…</span>
+        <h1 id="hostname">Current website</h1>
+        <p id="site-description" hidden></p>
+        <button id="site-toggle" class="primary" disabled>Loading…</button>
+      </section>
+      <div class="metrics">
+        <div><strong id="blocked">—</strong><span>Requests blocked</span></div>
+        <div><strong id="rules">—</strong><span>Filter rules</span></div>
+      </div>
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+    </main>
+    <footer>
+      <button id="settings" class="text-button">Settings</button>
+      <span id="version"></span>
+    </footer>
+    <script src="popup.js"></script>
+  </body>
+</html>

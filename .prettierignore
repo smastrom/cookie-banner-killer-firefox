@@ -1,0 +1,3 @@
+# bun fmt reads this file. Preserve third-party snapshots byte for byte.
+filters/
+vendor/

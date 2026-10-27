@@ -1,0 +1,12 @@
+[run]
+# Run dependency CLIs with Bun even when their shebang requests Node.js.
+bun = true
+shell = "bun"
+
+[fmt]
+printWidth = 100
+semi = false
+singleQuote = true
+tabWidth = 2
+trailingComma = "es5"
+useTabs = false

@@ -1,0 +1,29 @@
+{
+  "downloadedAt": "2026-10-27T23:14:48.227Z",
+  "sources": [
+    {
+      "id": "easylist-cookie",
+      "name": "EasyList Cookie",
+      "url": "https://secure.fanboy.co.nz/fanboy-cookiemonster_ubo.txt",
+      "sha256": "b2120f44227310c250cf3cbce4f9ae88fbdfb898fb985d027930961cca4080ea"
+    },
+    {
+      "id": "easylist-cookie-specific",
+      "name": "EasyList Cookie · site fixes",
+      "url": "https://secure.fanboy.co.nz/easylist_cookie_specific_uBO.txt",
+      "sha256": "7c2d804ccb2bc98a48c3e13bfdeba2aa091c9f5e59d67894575300725386f37b"
+    },
+    {
+      "id": "ublock-cookies",
+      "name": "uBlock Cookie Notices",
+      "url": "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/annoyances-cookies.txt",
+      "sha256": "1d6604e48421259d81249ce74e8bcb667b0a66552a83fd119558a517985116a7"
+    },
+    {
+      "id": "brave-cookies",
+      "name": "Brave cookie additions",
+      "url": "https://raw.githubusercontent.com/brave/adblock-lists/master/brave-lists/brave-cookie-specific.txt",
+      "sha256": "bf1c3fa19ed1732a41291b8d1b09cb539f3f12840212c741bbc74984a9beef40"
+    }
+  ]
+}

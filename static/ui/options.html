@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cookie Banner Killer · Settings</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="options">
+    <header class="brand">
+      <img src="../icons/shield.svg" width="32" height="32" alt="" />
+      <strong>Cookie Banner Killer</strong>
+      <span id="version" class="version"></span>
+    </header>
+    <main>
+      <h1>Settings</h1>
+      <form id="settings-form">
+        <fieldset>
+          <legend>General</legend>
+          <label class="toggle-row"
+            ><span><strong>Block cookie banners</strong></span
+            ><input id="enabled" type="checkbox" role="switch"
+          /></label>
+          <label class="toggle-row"
+            ><span
+              ><strong>Restore scrolling</strong
+              ><small>Unlock pages after a banner is hidden.</small></span
+            ><input id="repairScroll" type="checkbox" role="switch"
+          /></label>
+          <label class="toggle-row"
+            ><span><strong>Update filters daily</strong></span
+            ><input id="autoUpdate" type="checkbox" role="switch"
+          /></label>
+          <label class="toggle-row"
+            ><span
+              ><strong>Allow consent actions</strong
+              ><small id="consent-note"
+                >Some rules click buttons or store consent and may accept optional cookies.</small
+              ></span
+            ><input
+              id="compatibilityMode"
+              type="checkbox"
+              role="switch"
+              aria-describedby="consent-note"
+          /></label>
+        </fieldset>
+        <fieldset>
+          <legend>Excluded websites</legend>
+          <label for="disabledSites">One hostname per line. Includes subdomains.</label>
+          <textarea
+            id="disabledSites"
+            rows="4"
+            spellcheck="false"
+            placeholder="example.com"
+          ></textarea>
+        </fieldset>
+        <fieldset>
+          <legend>Custom filters</legend>
+          <label for="customFilters">Use EasyList or uBlock filter syntax.</label>
+          <textarea
+            id="customFilters"
+            class="code"
+            rows="5"
+            spellcheck="false"
+            placeholder="example.com###cookie-banner&#10;example.com##.cookie-overlay"
+          ></textarea>
+          <p class="fine-print">
+            Consent actions follow the setting above. Unsupported rules are skipped.
+          </p>
+        </fieldset>
+        <div class="save-row">
+          <button id="save" class="primary" type="submit" disabled>Save</button
+          ><span>Reload open pages to apply changes.</span>
+        </div>
+      </form>
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+      <section class="filter-section">
+        <div class="section-title">
+          <h2>Filter lists</h2>
+          <button id="update" type="button">Update now</button>
+        </div>
+        <p id="filter-status">Loading filter information…</p>
+        <ul id="sources"></ul>
+      </section>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

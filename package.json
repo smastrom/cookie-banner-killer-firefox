@@ -1,0 +1,36 @@
+{
+  "name": "cookie-banner-killer-firefox",
+  "version": "1.0.2",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.4",
+  "engines": {
+    "bun": ">=1.4.4"
+  },
+  "description": "A Firefox cookie-banner blocker using EasyList Cookie and the Ghostery filtering engine.",
+  "license": "MPL-2.0",
+  "author": "Astro",
+  "scripts": {
+    "build": "bun scripts/build.mjs",
+    "update:filters": "bun scripts/update-filters.mjs",
+    "audit:filters": "bun scripts/audit-filters.mjs",
+    "test": "bun test ./tests",
+    "test:firefox": "bun tests/firefox.mjs",
+    "test:smoke": "bun tests/smoke-sites.mjs",
+    "format": "bun fmt",
+    "format:check": "bun fmt --check",
+    "lint": "bun --bun ./node_modules/web-ext/bin/web-ext.js lint --source-dir dist --warnings-as-errors",
+    "package": "bun run build && bun scripts/package.mjs",
+    "start": "bun --bun ./node_modules/web-ext/bin/web-ext.js run --source-dir dist --firefox '/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox'"
+  },
+  "dependencies": {
+    "@ghostery/adblocker-content": "2.20.1",
+    "@ghostery/adblocker-extended-selectors": "2.20.1",
+    "@ghostery/adblocker-webextension": "2.20.1"
+  },
+  "devDependencies": {
+    "jszip": "3.10.2",
+    "selenium-webdriver": "4.40.0",
+    "web-ext": "10.8.0"
+  }
+}
