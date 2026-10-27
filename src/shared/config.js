@@ -33,6 +33,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   autoUpdate: true,
   compatibilityMode: false,
+  paywallSupport: false,
   repairScroll: true,
   disabledSites: [],
   customFilters: '',
@@ -90,7 +91,13 @@ export function supportedPage(url) {
 
 export function validateSettings(input) {
   const settings = { ...DEFAULT_SETTINGS }
-  for (const key of ['enabled', 'autoUpdate', 'compatibilityMode', 'repairScroll']) {
+  for (const key of [
+    'enabled',
+    'autoUpdate',
+    'compatibilityMode',
+    'repairScroll',
+    'paywallSupport',
+  ]) {
     if (input[key] !== undefined) {
       if (typeof input[key] !== 'boolean') throw new Error(`Invalid setting: ${key}`)
       settings[key] = input[key]

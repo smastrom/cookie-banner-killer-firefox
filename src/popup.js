@@ -14,6 +14,8 @@ async function render() {
   state = await send({ action: 'getState', tabId: tab?.id })
   $('enabled').checked = state.settings.enabled
   $('enabled').disabled = false
+  $('paywallSupport').checked = state.settings.paywallSupport
+  $('paywallSupport').disabled = false
   $('hostname').textContent = state.tab?.hostname || 'No website selected'
   $('status').textContent = !state.tab?.supported
     ? 'Unavailable'
@@ -24,28 +26,40 @@ async function render() {
     ? 'Open a website to use this control.'
     : !state.tab.supported
       ? 'Firefox protects this page from extensions.'
-      : !state.settings.enabled
+      : !state.settings.enabled && !state.settings.paywallSupport
         ? 'Blocking is paused everywhere.'
         : state.tab.paused
           ? 'This website and its subdomains are paused.'
           : ''
   $('site-description').hidden = !$('site-description').textContent
-  $('site-toggle').disabled = !state.tab?.supported || !state.settings.enabled
+  const paywallLabels = {
+    checking: 'Checking article…',
+    restored: 'Article restored',
+    unavailable: 'Full article unavailable',
+    'not-detected': 'No supported paywall detected',
+  }
+  $('paywall-status').textContent = state.tab?.paywall
+    ? paywallLabels[state.tab.paywall.status]
+    : ''
+  $('paywall-status').hidden = !$('paywall-status').textContent
+  $('site-toggle').disabled =
+    !state.tab?.supported || (!state.settings.enabled && !state.settings.paywallSupport)
   $('site-toggle').textContent = state.tab?.paused ? 'Enable here & reload' : 'Pause here & reload'
   $('blocked').textContent = String(state.tab?.blocked || 0)
   $('rules').textContent = (state.counts.network + state.counts.cosmetic).toLocaleString()
   if (state.startupError || state.updateError)
     showError(new Error(state.startupError || state.updateError))
 }
-$('enabled').addEventListener('change', async () => {
-  try {
-    await send({ action: 'saveSettings', settings: { enabled: $('enabled').checked } })
-    if (state.tab?.hostname) await browser.tabs.reload(tab.id)
-    await render()
-  } catch (error) {
-    showError(error)
-  }
-})
+for (const key of ['enabled', 'paywallSupport'])
+  $(key).addEventListener('change', async () => {
+    try {
+      await send({ action: 'saveSettings', settings: { [key]: $(key).checked } })
+      if (state.tab?.hostname) await browser.tabs.reload(tab.id)
+      await render()
+    } catch (error) {
+      showError(error)
+    }
+  })
 $('site-toggle').addEventListener('click', async () => {
   $('site-toggle').disabled = true
   try {

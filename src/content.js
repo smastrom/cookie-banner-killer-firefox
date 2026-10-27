@@ -1,6 +1,7 @@
 import { DOMMonitor, extractFeaturesFromDOM, injectScript } from '@ghostery/adblocker-content'
 import { handlePseudoDirective, querySelectorAll } from '@ghostery/adblocker-extended-selectors'
 import { createScrollRepair } from './scroll-repair.js'
+import { createPaywallSupport } from './paywalls.js'
 
 const EMPTY = { active: false, styles: '', scripts: [], extended: [] }
 const extended = new Map()
@@ -8,6 +9,8 @@ const marked = new Map()
 const styleTexts = new Set()
 const shadows = new Map()
 const scrollRepair = createScrollRepair()
+const paywalls = createPaywallSupport()
+let lastPaywallStatus = ''
 let active = true
 let observer
 let monitor
@@ -23,6 +26,7 @@ async function request(features) {
     .catch(() => EMPTY)
   if (currentGeneration !== generation) return
   active = Boolean(result?.active)
+  paywalls.configure(result?.paywallSupport)
   if (!active) {
     stop()
     return
@@ -43,6 +47,12 @@ function schedule() {
     timer = undefined
     updateExtended()
     scrollRepair.run()
+    const paywall = paywalls.run()
+    const statusKey = JSON.stringify([location.href, paywall])
+    if (paywall && statusKey !== lastPaywallStatus) {
+      lastPaywallStatus = statusKey
+      void browser.runtime.sendMessage({ action: 'paywallStatus', ...paywall }).catch(() => {})
+    }
     for (const [root, { watcher }] of shadows) {
       if (!root.host.isConnected) {
         watcher.disconnect()
@@ -158,6 +168,8 @@ window.addEventListener('pagehide', () => {
   generation++
   stop()
 })
+window.addEventListener('popstate', schedule)
+window.addEventListener('hashchange', schedule)
 window.addEventListener('pageshow', (event) => {
   if (event.persisted) {
     shadows.clear()

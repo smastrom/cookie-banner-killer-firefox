@@ -1,12 +1,12 @@
 :root {
-  color-scheme: light dark;
-  --bg: #f7f8f4;
-  --surface: #fff;
-  --text: #1b302b;
-  --muted: #65726b;
-  --line: #dde4dc;
-  --accent: #245d4b;
-  --soft: #e9f2e9;
+  color-scheme: dark;
+  --bg: #1b1c1f;
+  --surface: #25272b;
+  --text: #f3f4f5;
+  --muted: #b0b3b9;
+  --line: #3a3d42;
+  --accent: #287c56;
+  --accent-text: #7bdfab;
   font-family:
     system-ui,
     -apple-system,
@@ -48,7 +48,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid #4c9b7c;
+  outline: 3px solid var(--accent-text);
   outline-offset: 3px;
 }
 button.primary {
@@ -60,10 +60,10 @@ button.text-button {
   background: transparent;
   border: 0;
   padding: 0;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 a {
-  color: var(--accent);
+  color: var(--accent-text);
   text-underline-offset: 3px;
 }
 .brand {
@@ -106,7 +106,7 @@ input[role='switch'] {
   width: 40px;
   height: 23px;
   border-radius: 20px;
-  background: #a4afa8;
+  background: #555a63;
   position: relative;
   cursor: pointer;
   transition: background 0.15s;
@@ -133,7 +133,7 @@ input[role='switch']:checked::after {
   font-size: 10px;
   letter-spacing: 1.4px;
   font-weight: 750;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .fine-print {
   color: var(--muted);
@@ -149,7 +149,7 @@ input[role='switch']:checked::after {
   display: none;
 }
 .message.error {
-  color: #af3e24;
+  color: #ff9b89;
 }
 .popup {
   width: 350px;
@@ -303,22 +303,6 @@ h2 {
   padding-left: 18px;
   font-size: 13px;
   line-height: 2;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #17231f;
-    --surface: #202e28;
-    --text: #edf3ed;
-    --muted: #b0bdb4;
-    --line: #3b4b40;
-    --accent: #397d62;
-    --soft: #263e31;
-  }
-  a,
-  .eyebrow,
-  button.text-button {
-    color: #a4efc3;
-  }
 }
 @media (max-width: 500px) {
   .options {

@@ -8,7 +8,7 @@
   </head>
   <body class="popup">
     <header class="brand">
-      <img src="../icons/shield.svg" width="28" height="28" alt="" />
+      <img src="../icons/shield-outline.svg" width="28" height="28" alt="" />
       <strong>Cookie Banner Killer</strong>
     </header>
     <main>
@@ -16,10 +16,15 @@
         ><span>Block cookie banners</span
         ><input id="enabled" type="checkbox" role="switch" disabled
       /></label>
+      <label class="toggle-row"
+        ><span>Paywall support</span
+        ><input id="paywallSupport" type="checkbox" role="switch" disabled
+      /></label>
       <section class="site-card" aria-label="Current website">
         <span class="eyebrow" id="status">Loading…</span>
         <h1 id="hostname">Current website</h1>
         <p id="site-description" hidden></p>
+        <p id="paywall-status" hidden></p>
         <button id="site-toggle" class="primary" disabled>Loading…</button>
       </section>
       <div class="metrics">

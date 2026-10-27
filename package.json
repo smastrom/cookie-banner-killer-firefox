@@ -1,6 +1,6 @@
 {
   "name": "cookie-banner-killer-firefox",
-  "version": "1.0.2",
+  "version": "1.1.2",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.4",
@@ -9,7 +9,7 @@
   },
   "description": "A Firefox cookie-banner blocker using EasyList Cookie and the Ghostery filtering engine.",
   "license": "MPL-2.0",
-  "author": "Astro",
+  "author": "GPT 6 Astra",
   "scripts": {
     "build": "bun scripts/build.mjs",
     "update:filters": "bun scripts/update-filters.mjs",
@@ -17,6 +17,7 @@
     "test": "bun test ./tests",
     "test:firefox": "bun tests/firefox.mjs",
     "test:smoke": "bun tests/smoke-sites.mjs",
+    "test:paywalls:live": "bun tests/paywalls-live.mjs",
     "format": "bun fmt",
     "format:check": "bun fmt --check",
     "lint": "bun --bun ./node_modules/web-ext/bin/web-ext.js lint --source-dir dist --warnings-as-errors",

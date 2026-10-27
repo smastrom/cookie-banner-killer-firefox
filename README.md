@@ -8,10 +8,17 @@ A Firefox extension that removes cookie banners using the Ghostery filtering eng
 - Restores scrolling after known banners are hidden.
 - Includes per-site exceptions, custom filters, daily list updates, and bundled lists for offline use.
 - Includes Firefox-specific fixes for Corriere and a hiding rule for the Guardian’s cookie wall.
+- Optional paywall support on supported websites.
 
 Consent actions are off by default. Enabling **Allow consent actions** runs additional upstream rules that click buttons or write consent cookies/storage; some accept optional cookies.
 
-This covers Brave’s cookie lists, not all of Brave Shields. It does not include general ad/tracker lists, browser fingerprinting protection, or a general paywall remover. Closed shadow roots, protected Firefox pages, and some site-specific behavior remain unsupported. Hiding a banner does not guarantee that tracking stops.
+Coverage follows Brave’s cookie lists. General ad/tracker blocking, fingerprinting protection, closed shadow roots and protected Firefox pages are outside its scope. Hiding a banner does not guarantee that tracking stops.
+
+## Paywall support
+
+Enable **Paywall support** in the popup or settings; it is off by default and works independently of cookie blocking. Site exceptions pause both features.
+
+Content withheld by the server cannot be restored. If an adapter cannot find the article text, it leaves the subscription prompt intact. The adapters preserve sign-in cookies and show their result in the popup. Publisher changes can break support; fixes ship with extension updates.
 
 ## Install
 
@@ -36,6 +43,7 @@ bun test
 bun run build
 bun run lint
 bun run test:firefox
+bun run test:paywalls:live
 bun run audit:filters --online
 bun run package
 ```
@@ -44,8 +52,9 @@ bun run package
 - `bun run audit:filters --online` compares sources with Brave’s current catalog and checks active rules, selectors, scriptlets, and redirects. It does not measure live-site coverage.
 - `bun run test:smoke <url> …` compares pages in clean Firefox profiles with and without the extension. Results go to `test-results/`.
 - `bun run test:firefox` runs local integration fixtures in an isolated profile. Set `FIREFOX_BINARY` if Firefox Developer Edition is installed elsewhere.
+- `bun run test:paywalls:live` compares supported articles with paywall support off/on in isolated profiles; saves measurements and screenshots to `test-results/paywalls/`.
 
-Packaging produces reproducible XPI and source archives in `artifacts/`. Scriptlet code is bundled; filter updates do not replace it. The background engine is in `src/background.js`, page filtering in `src/content.js`, and local site fixes in `src/shared/fallbacks.js`.
+Packaging produces reproducible XPI and source archives in `artifacts/`. Scriptlet and adapter code is bundled. Publisher URLs, scope and test dates live in `src/shared/paywalls.js`.
 
 ## Privacy and licenses
 
@@ -53,4 +62,4 @@ No telemetry or accounts. Settings and downloaded filters stay in browser storag
 
 Original source: MPL-2.0. Third-party lists and resources retain their licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Include the corresponding source when redistributing packages. This project is independent of Brave, Ghostery, and Mozilla.
 
-Made by Astro. Distributed as is, without warranty.
+Made with AI assistance and distributed as is.

@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { Builder, By, until } from 'selenium-webdriver'
 import firefox from 'selenium-webdriver/firefox.js'
+import { articleText, paywallFixture, previewText } from './fixtures/paywalls.mjs'
 
 const UUID = '5fd4e322-495e-44d4-85c8-7661fbcbb330'
 const ID = 'cookie-banner-killer@local.extension'
@@ -12,6 +13,21 @@ const results = []
 let port
 let blockedScriptHits = 0
 const server = http.createServer((req, res) => {
+  const host = req.headers.host.split(':')[0]
+  if (['www.editorialedomani.it', 'www.ilfoglio.it'].includes(host)) {
+    res.setHeader('Content-Type', 'text/html')
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self'; style-src 'unsafe-inline'"
+    )
+    res.end(
+      paywallFixture(
+        `http://${req.headers.host}${req.url}`,
+        host.includes('domani') ? 'domani' : 'ilfoglio'
+      )
+    )
+    return
+  }
   if (req.url.startsWith('/app.js')) {
     res.setHeader('Content-Type', 'application/javascript')
     res.end(`
@@ -40,12 +56,15 @@ const server = http.createServer((req, res) => {
 await new Promise((resolveListen) => server.listen(0, '127.0.0.1', resolveListen))
 port = server.address().port
 const fixtureURL = `http://127.0.0.1:${port}/fixture`
+const domaniURL = `http://www.editorialedomani.it:${port}/politica/mondo/test-article-abcdefgh`
+const foglioURL = `http://www.ilfoglio.it:${port}/politica/2026/10/27/news/test-article--123456`
 
 const options = new firefox.Options()
   .addArguments('-headless')
   .setPreference('extensions.webextensions.uuids', JSON.stringify({ [ID]: UUID }))
   .setPreference('browser.shell.checkDefaultBrowser', false)
   .setPreference('browser.startup.page', 0)
+  .setPreference('network.dns.localDomains', 'www.editorialedomani.it,www.ilfoglio.it')
 options.setBinary(
   process.env.FIREFOX_BINARY || '/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox'
 )
@@ -201,6 +220,116 @@ try {
     )
     assert.deepEqual((await api({ action: 'getState' })).settings.disabledSites, ['example.com'])
   })
+  await check(
+    'paywall support is opt-in and restores page-data text independently of cookie blocking',
+    async () => {
+      await configure({ enabled: false, paywallSupport: false, disabledSites: [] })
+      await driver.get(domaniURL)
+      assert.equal(
+        await driver.findElement(By.css('.article-preview')).getText(),
+        previewText.trim()
+      )
+      await configure({ paywallSupport: true })
+      await driver.get(domaniURL)
+      await driver.wait(() => hidden('.paywallbox'), 10000)
+      assert.equal(
+        (await driver.findElement(By.css('.article-preview')).getText()).replace(/\s+/g, ' '),
+        articleText.replace(/\s+/g, ' ').trim()
+      )
+      assert.equal(await driver.findElement(By.id('cookie-banner')).isDisplayed(), true)
+      assert.equal(await driver.findElement(By.id('unrelated')).isDisplayed(), true)
+      assert.equal(await driver.executeScript('return document.cookie'), '')
+    }
+  )
+  await check(
+    'collapsed article content is expanded while account dialogs and late page updates remain intact',
+    async () => {
+      await driver.get(foglioURL)
+      await driver.wait(() => hidden('.paywall-wrapper > .paywall'), 10000)
+      assert.ok(
+        await driver.executeScript(
+          'return document.querySelector(".paywall-wrapper__story-content").clientHeight > 100'
+        )
+      )
+      await driver.executeScript(
+        'document.querySelector(".paywall-wrapper__story-content").style.height="0px";document.querySelector("#account-dialog").showModal()'
+      )
+      assert.equal(await driver.findElement(By.id('account-dialog')).isDisplayed(), true)
+      assert.ok(
+        await driver.executeScript(
+          'return document.querySelector(".paywall-wrapper__story-content").clientHeight > 100'
+        )
+      )
+      assert.equal(await driver.findElement(By.id('unrelated')).isDisplayed(), true)
+    }
+  )
+  await check(
+    'unavailable, malformed and unrelated article data leaves the subscription prompt visible',
+    async () => {
+      for (const variant of ['missing', 'malformed', 'wrong-article']) {
+        await driver.get(`${domaniURL}?variant=${variant}`)
+        await driver.sleep(350)
+        assert.equal(await driver.findElement(By.css('.paywallbox')).isDisplayed(), true)
+        assert.equal(
+          await driver.executeScript(
+            'return document.querySelector("[data-cbk-readable]") === null'
+          ),
+          true
+        )
+      }
+      await driver.get(`${foglioURL}?variant=missing`)
+      await driver.sleep(350)
+      assert.equal(
+        await driver.findElement(By.css('.paywall-wrapper > .paywall')).isDisplayed(),
+        true
+      )
+    }
+  )
+  await check(
+    'article restoration treats embedded markup as text and responds to delayed data',
+    async () => {
+      await driver.get(`${domaniURL}?variant=payload`)
+      await driver.wait(() => hidden('.paywallbox'), 10000)
+      assert.equal(
+        await driver.executeScript(
+          'return Boolean(window.injected) || Boolean(document.querySelector(".article-preview img"))'
+        ),
+        false
+      )
+      await driver.get(`${domaniURL}?variant=missing`)
+      await driver.executeScript(
+        `const script=document.createElement('script');script.type='application/ld+json';script.textContent=JSON.stringify({'@type':'NewsArticle',url:location.href,articleBody:arguments[0]});document.head.append(script)`,
+        articleText
+      )
+      await driver.wait(() => hidden('.paywallbox'), 10000)
+    }
+  )
+  await check(
+    'site pauses, paywall disable and SPA navigation stop publisher changes',
+    async () => {
+      await driver.executeScript(
+        'history.pushState({},"","/login");document.body.append(document.createElement("span"))'
+      )
+      await driver.wait(async () => !(await hidden('.paywallbox')), 5000)
+      assert.equal(
+        await driver.executeScript('return document.querySelector(".article-preview").textContent'),
+        previewText
+      )
+      await configure({ disabledSites: ['editorialedomani.it'] })
+      await driver.get(domaniURL)
+      await driver.sleep(350)
+      assert.equal(await driver.findElement(By.css('.paywallbox')).isDisplayed(), true)
+      await configure({ disabledSites: [], paywallSupport: false })
+      await driver.get(foglioURL)
+      assert.equal(
+        await driver.executeScript(
+          'return document.querySelector(".paywall-wrapper__story-content").clientHeight'
+        ),
+        0
+      )
+      await configure({ enabled: true })
+    }
+  )
   await mkdir('test-results', { recursive: true })
   await driver.executeScript('window.scrollTo(0, 0)')
   await writeFile('test-results/options.png', await driver.takeScreenshot(), 'base64')

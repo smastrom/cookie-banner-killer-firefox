@@ -1,5 +1,11 @@
 const $ = (id) => document.getElementById(id)
-const booleanFields = ['enabled', 'repairScroll', 'autoUpdate', 'compatibilityMode']
+const booleanFields = [
+  'enabled',
+  'repairScroll',
+  'autoUpdate',
+  'compatibilityMode',
+  'paywallSupport',
+]
 async function send(message) {
   const result = await browser.runtime.sendMessage(message)
   if (result?.ok === false) throw new Error(result.error)

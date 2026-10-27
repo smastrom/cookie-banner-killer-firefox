@@ -10,6 +10,7 @@ import {
   validateSettings,
 } from './shared/config.js'
 import { buildEngine, downloadLists, engineCounts } from './shared/filters.js'
+import { PAYWALL_STYLES, paywallPublisher, paywallSite } from './shared/paywalls.js'
 
 const EMPTY = { active: false, scripts: [], styles: '', extended: [] }
 const ALARM = 'refresh-cookie-lists'
@@ -38,16 +39,18 @@ function tabData(tabId, url) {
 function badge(tabId) {
   const data = tabs.get(tabId)
   if (!data) return
-  const active = Boolean(engine) && enabledForPage(settings, data.url)
+  const active =
+    (Boolean(engine) && enabledForPage(settings, data.url)) || canSupportPaywalls(data.url)
+  void browser.browserAction.setBadgeText({ tabId, text: '' }).catch(() => {})
   void browser.browserAction
-    .setBadgeText({
-      tabId,
-      text: !active ? 'OFF' : data.blocked ? String(Math.min(data.blocked, 999)) : '',
-    })
+    .setTitle({ tabId, title: active ? 'Cookie Banner Killer' : 'Cookie Banner Killer · Paused' })
     .catch(() => {})
-  void browser.browserAction
-    .setBadgeBackgroundColor({ tabId, color: active ? '#216454' : '#727875' })
-    .catch(() => {})
+}
+
+function canSupportPaywalls(url) {
+  return (
+    settings.paywallSupport && Boolean(paywallSite(url)) && !isPaused(url, settings.disabledSites)
+  )
 }
 
 function canFilter(tabId, documentUrl) {
@@ -212,7 +215,9 @@ async function cosmetics(message, sender) {
   if (!sender.tab || sender.frameId === undefined) return EMPTY
   const pageUrl = hostnameOf(sender.url) ? sender.url : sender.tab.url
   tabData(sender.tab.id, sender.tab.url)
-  if (!canFilter(sender.tab.id, pageUrl)) return EMPTY
+  const filterCookies = canFilter(sender.tab.id, pageUrl)
+  const paywallSupport = sender.frameId === 0 && canSupportPaywalls(pageUrl)
+  if (!filterCookies && !paywallSupport) return EMPTY
   const { hostname, domain } = Request.fromRawDetails({ url: pageUrl })
   const topPage = Request.fromRawDetails({ url: sender.tab.url || '' })
   const start = message.lifecycle === 'start'
@@ -220,20 +225,27 @@ async function cosmetics(message, sender) {
     Array.isArray(message[key])
       ? message[key].filter((s) => typeof s === 'string' && s.length <= 4096).slice(0, 10000)
       : []
-  const result = engine.getCosmeticsFilters({
-    url: pageUrl,
-    hostname,
-    domain,
-    ancestors: sender.frameId === 0 ? [] : [{ hostname: topPage.hostname, domain: topPage.domain }],
-    ids: features('ids'),
-    classes: features('classes'),
-    hrefs: features('hrefs'),
-    getBaseRules: start,
-    getInjectionRules: start,
-    getExtendedRules: true,
-    getRulesFromHostname: start,
-    getRulesFromDOM: !start,
-  })
+  const result = filterCookies
+    ? engine.getCosmeticsFilters({
+        url: pageUrl,
+        hostname,
+        domain,
+        ancestors:
+          sender.frameId === 0 ? [] : [{ hostname: topPage.hostname, domain: topPage.domain }],
+        ids: features('ids'),
+        classes: features('classes'),
+        hrefs: features('hrefs'),
+        getBaseRules: start,
+        getInjectionRules: start,
+        getExtendedRules: true,
+        getRulesFromHostname: start,
+        getRulesFromDOM: !start,
+      })
+    : { ...EMPTY }
+  if (paywallSupport) {
+    result.active = true
+    result.styles += PAYWALL_STYLES
+  }
   if (!result.active) return EMPTY
   if (result.styles) {
     try {
@@ -248,7 +260,7 @@ async function cosmetics(message, sender) {
       return EMPTY
     } // The frame may have navigated or closed.
   }
-  return { ...result, repairScroll: settings.repairScroll }
+  return { ...result, repairScroll: filterCookies && settings.repairScroll, paywallSupport }
 }
 
 async function getState(tabId) {
@@ -274,9 +286,18 @@ async function getState(tabId) {
           id: tab.id,
           hostname: hostnameOf(url),
           supported: supportedPage(url),
-          active: Boolean(engine) && enabledForPage(settings, url),
+          active: (Boolean(engine) && enabledForPage(settings, url)) || canSupportPaywalls(url),
           paused: isPaused(url, settings.disabledSites),
           blocked: tabs.get(tab.id)?.blocked || 0,
+          paywall:
+            canSupportPaywalls(url) && paywallPublisher(url)
+              ? {
+                  status:
+                    tabs.get(tab.id)?.paywall?.url === url
+                      ? tabs.get(tab.id).paywall.status
+                      : 'checking',
+                }
+              : null,
         }
       : null,
   }
@@ -301,6 +322,20 @@ async function saveSettings(patch) {
 browser.runtime.onMessage.addListener((message, sender) => {
   if (!message || typeof message !== 'object') return undefined
   if (message.action === 'getCosmeticsFilters') return cosmetics(message, sender).catch(() => EMPTY)
+  if (message.action === 'paywallStatus') {
+    const publisher = paywallPublisher(sender.url)
+    if (
+      sender.tab &&
+      sender.frameId === 0 &&
+      canSupportPaywalls(sender.url) &&
+      publisher?.id === message.publisher &&
+      ['restored', 'unavailable', 'not-detected'].includes(message.status)
+    ) {
+      const data = tabData(sender.tab.id, sender.tab.url)
+      data.paywall = { url: sender.url, status: message.status }
+    }
+    return undefined
+  }
   // Settings and list updates can only be requested by our own extension pages.
   if (!sender.url?.startsWith(browser.runtime.getURL('ui/'))) return undefined
   return (async () => {

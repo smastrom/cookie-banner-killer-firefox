@@ -8,7 +8,7 @@
   </head>
   <body class="options">
     <header class="brand">
-      <img src="../icons/shield.svg" width="32" height="32" alt="" />
+      <img src="../icons/shield-outline.svg" width="32" height="32" alt="" />
       <strong>Cookie Banner Killer</strong>
       <span id="version" class="version"></span>
     </header>
@@ -43,6 +43,24 @@
               role="switch"
               aria-describedby="consent-note"
           /></label>
+        </fieldset>
+        <fieldset>
+          <legend>Paywalls</legend>
+          <label class="toggle-row">
+            <span
+              ><strong>Paywall support</strong
+              ><small id="paywall-note"
+                >Show article text already present on supported pages. Content withheld by the
+                server cannot be restored.</small
+              ></span
+            >
+            <input
+              id="paywallSupport"
+              type="checkbox"
+              role="switch"
+              aria-describedby="paywall-note"
+            />
+          </label>
         </fieldset>
         <fieldset>
           <legend>Excluded websites</legend>
